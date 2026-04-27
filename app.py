@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 
 # --- KONFIGURĀCIJA (IEVADI SAVUS DATUS ŠEIT) ---
 RAPID_API_KEY = "181c1c87ddmsh1dc01840c36bb61p11954ajsn613917400f0b"
-HUGGING_FACE_API_KEY = "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"
+HUGGING_FACE_API_KEY = "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"
 # E-pasta dati (pēc izvēles, ja gribi paziņojumus)
 SENDER_EMAIL = "kalvis.ozolu@gmail.com"
 SENDER_PASSWORD = "tava_app_parole"
