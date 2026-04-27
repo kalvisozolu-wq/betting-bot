@@ -1,10 +1,9 @@
 import streamlit as st
+import requests
+import smtplib
+from email.mime.text import MIMEText
+from playwright.sync_api import sync_playwright
+import pandas as pd
 import os
 
-@st.cache_resource
-def setup_playwright():
-    os.system("playwright install chromium")
-
-setup_playwright()
-
-# ... (tālāk paliek viss vecais kods: import requests, smtplib utt.)
+# Tālāk seko pārējais kods...
