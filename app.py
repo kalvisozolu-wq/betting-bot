@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 # Bots pats paņems šīs vērtības no Streamlit Secrets seifa
 try:
     RAPID_API_KEY = st.secrets["181c1c87ddmsh1dc01840c36bb61p11954ajsn613917400f0b"]
-    HUGGING_FACE_API_KEY = st.secrets["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"]
+    HUGGING_FACE_API_KEY = st.secrets["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"]
 except:
     st.error("Kļūda: Streamlit Secrets sadaļā nav atrasta API atslēga!")
     st.stop()
