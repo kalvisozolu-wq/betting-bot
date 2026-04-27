@@ -3,13 +3,12 @@ import requests
 import pandas as pd
 from datetime import date
 
-# --- 1. KONFIGURĀCIJA (DROŠA ATSLĒGU IEGŪŠANA) ---
+# --- 1. KONFIGURĀCIJA (ATSAVINĀTA NO KODA DROŠĪBAI) ---
 try:
-    RAPID_API_KEY = st.secrets["181c1c87ddmsh1dc01840c36bb61p11954ajsn613917400f0b"]
-    HUGGING_FACE_API_KEY = st.secrets["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"]
+    RAPID_API_KEY = st.secrets["RAPID_API_KEY"]
+    HUGGING_FACE_API_KEY = st.secrets["HUGGING_FACE_API_KEY"]
 except Exception:
-    st.error("Kļūda: Streamlit iestatījumos (Secrets) nav atrastas API atslēgas!")
-    st.info("Pievieno RAPID_API_KEY un HUGGING_FACE_API_KEY savā Streamlit panelī.")
+    st.error("⚠️ Kļūda: Secrets sadaļā nav atrasti API kodi!")
     st.stop()
 
 # --- 2. FUNKCIJA: NBA DATU IEGŪŠANA NO RAPIDAPI ---
@@ -27,25 +26,23 @@ def get_nba_games():
         response = requests.get(url, headers=headers, params=querystring)
         if response.status_code == 200:
             res = response.json()
-            if res['results'] == 0:
-                return None, f"Šodien ({today}) NBA spēles nav atrastas."
+            if res.get('results', 0) == 0:
+                return None, f"Šodien ({today}) NBA spēles vēl nav ieplānotas vai atrastas."
             
             games_list = []
             for item in res['response']:
-                # Pievienojam fiktīvus koeficientus analīzei, ja API tos neiedod tieši
-                # Profesionālā versijā šeit slēdzam klāt /odds endpointu
                 games_list.append({
-                    "Spēle": f"{item['teams']['visitors']['name']} @ {item['teams']['home']['name']}",
-                    "Sākums": item['status']['long'],
+                    "Spēle": f"{item['teams']['visitors']['name']} vs {item['teams']['home']['name']}",
+                    "Status": item['status']['long'],
                     "Arēna": item['arena']['name'],
-                    "Kef_1": 1.95, # Bāzes koeficients testa nolūkiem
+                    "Kef_1": 1.95, # Bāzes koeficients (bukmeikeru API ir maksas, šis ir modelēšanai)
                     "Kef_2": 1.95
                 })
             return pd.DataFrame(games_list), None
         else:
-            return None, f"RapidAPI kļūda: {response.status_code}"
+            return None, f"RapidAPI Kļūda: {response.status_code} - {response.text}"
     except Exception as e:
-        return None, str(e)
+        return None, f"Sistēmas kļūda: {str(e)}"
 
 # --- 3. FUNKCIJA: AI ZIŅU ANALĪZE (HUGGING FACE) ---
 def analyze_news(text):
@@ -60,55 +57,50 @@ def analyze_news(text):
         response = requests.post(API_URL, headers=headers, json=payload)
         if response.status_code == 200:
             return response.json()
-        return {"error": "AI serviss nav pieejams"}
+        return {"error": f"AI Kļūda: {response.status_code}"}
     except:
-        return {"error": "Savienojuma kļūda"}
+        return {"error": "Nevarēja sasniegt AI serveri"}
 
 # --- 4. FUNKCIJA: VALUE BET APRĒĶINS ---
 def calculate_value_score(kef, sentiment_impact=0):
-    # Matemātiskais modelis: (Varbūtība + AI ietekme) * Koeficients
-    base_prob = 0.50 # 50% bāzes iespēja uzvarēt
+    base_prob = 0.50
     adjusted_prob = base_prob + sentiment_impact
     value_score = adjusted_prob * kef
     return round(value_score, 2)
 
-# --- 5. STREAMLIT UI (INTERFEISS) ---
+# --- 5. STREAMLIT UI ---
 st.set_page_config(page_title="NBA AI PRO", page_icon="🏀", layout="wide")
 
 st.title("🏀 NBA Pro-Analītikas Bots")
-st.markdown("---")
+st.info("Bots ir savienots ar NBA RapidAPI un HuggingFace AI.")
 
 tab1, tab2 = st.tabs(["🔥 Spēļu Monitorings", "🧠 AI Ziņu Analīze"])
 
 with tab1:
-    st.header("Šodienas NBA spēles")
-    if st.button("Skenēt tirgu"):
-        with st.spinner("Iegūstu datus no NBA serveriem..."):
+    if st.button("🚀 Skenēt NBA tirgu un meklēt izdevību"):
+        with st.spinner("Savienojos ar NBA serveriem..."):
             df, error = get_nba_games()
             
             if error:
                 st.warning(error)
             elif df is not None:
-                # Aprēķinām Value Score katrai spēlei
+                # Pievienojam Value Score
                 df['Value_Score'] = df['Kef_1'].apply(calculate_value_score)
                 
-                # Vizualizācija
-                st.write("Atrastās spēles:")
+                st.write("### Šodienas NBA saraksts:")
+                # Izceļam augstāko Value Score
                 st.dataframe(df.style.highlight_max(axis=0, subset=['Value_Score'], color='#2E7D32'), use_container_width=True)
-                
-                st.success("Analīze pabeigta. Meklē spēles ar Value Score virs 1.05!")
+                st.success("Skenēšana pabeigta!")
             else:
-                st.info("Dati nav pieejami.")
+                st.info("Šobrīd dati nav pieejami.")
 
 with tab2:
-    st.header("AI Ziņu un Baumu Analizators")
-    st.write("Iekopē ziņu (angliski), lai bots saprastu tās ietekmi uz spēli.")
-    
-    news_input = st.text_area("Ziņas teksts (piemēram, no Twitter):", height=150)
+    st.header("🧠 AI Baumu Analizators")
+    news_input = st.text_area("Iekopē ziņu (piem. no Twitter):", height=100)
     
     if st.button("Analizēt ziņas ietekmi"):
         if news_input:
-            with st.spinner("Mākslīgais intelekts domā..."):
+            with st.spinner("AI analizē kontekstu..."):
                 result = analyze_news(news_input)
                 
                 if "error" in result:
@@ -117,17 +109,15 @@ with tab2:
                     label = result['labels'][0]
                     score = result['scores'][0]
                     
-                    st.write(f"### Galvenais secinājums: **{label.upper()}**")
+                    st.subheader(f"Secinājums: {label.upper()}")
                     st.write(f"Ticamība: {round(score * 100, 1)}%")
                     
-                    # Ieteikums balstoties uz AI
-                    if label == "savainojums" and score > 0.7:
-                        st.error("⚠️ Brīdinājums: Šī ziņa būtiski pasliktina komandas izredzes. Meklē likmes pret šo komandu!")
+                    if label == "savainojums" and score > 0.6:
+                        st.error("🚨 KRITISKI: Šī ziņa norāda uz sastāva problēmām! Ieteicams izvērtēt likmes pret šo komandu.")
                     elif label == "pozitīvas ziņas":
-                        st.success("✅ Pozitīvs signāls: Komandas kapacitāte pieaug.")
+                        st.success("✅ POZITĪVI: Komandas kapacitāte pieaug.")
         else:
-            st.warning("Lūdzu, vispirms ievadi ziņas tekstu.")
+            st.warning("Lūdzu ievadi ziņu.")
 
-st.sidebar.markdown("---")
-st.sidebar.write("💰 **Bota statuss:** Aktīvs")
-st.sidebar.write(f"📅 **Datums:** {date.today()}")
+st.sidebar.write(f"📅 Bots ir tiešsaistē: {date.today()}")
+st.sidebar.write("✅ API statuss: Aktīvs")
