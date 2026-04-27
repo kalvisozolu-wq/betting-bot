@@ -4,13 +4,14 @@ import pandas as pd
 import smtplib
 from email.mime.text import MIMEText
 
-# --- KONFIGURĀCIJA (IEVADI SAVUS DATUS ŠEIT) ---
-RAPID_API_KEY = "181c1c87ddmsh1dc01840c36bb61p11954ajsn613917400f0b"
-HUGGING_FACE_API_KEY = "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"
-# E-pasta dati (pēc izvēles, ja gribi paziņojumus)
-SENDER_EMAIL = "kalvis.ozolu@gmail.com"
-SENDER_PASSWORD = "tava_app_parole"
-RECEIVER_EMAIL = "kalvis.ozolu@gmail.com"
+# --- KONFIGURĀCIJA (ATSAVINĀTA NO KODA) ---
+# Bots pats paņems šīs vērtības no Streamlit Secrets seifa
+try:
+    RAPID_API_KEY = st.secrets["181c1c87ddmsh1dc01840c36bb61p11954ajsn613917400f0b"]
+    HUGGING_FACE_API_KEY = st.secrets["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"]
+except:
+    st.error("Kļūda: Streamlit Secrets sadaļā nav atrasta API atslēga!")
+    st.stop()
 
 # --- 1. FUNKCIJA: IEGŪT ĪSTOS NBA KOEFICIENTUS ---
 def get_nba_odds():
