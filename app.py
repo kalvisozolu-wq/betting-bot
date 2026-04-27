@@ -5,7 +5,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 # --- KONFIGURĀCIJA ---
-HUGGING_FACE_API_KEY = "TAVA_HUGGING_FACE_TOKEN_ATSLĒGA"
+HUGGING_FACE_API_KEY = "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"
 SENDER_EMAIL = "tavsbots@gmail.com"
 SENDER_PASSWORD = "tava_gmail_app_parole"
 RECEIVER_EMAIL = "tavs.istais.epasts@gmail.com"
